@@ -1,0 +1,39 @@
+## build deploy
+on:
+  push:
+    branches:
+    - 'master'
+
+env:
+  PROJECT_ID: iino123-tech-blog
+  NODE_VERSION: "13.x" # set this to the node version to use
+
+deploy:
+  name: build and deploy
+  runs-on: ubuntu-latest
+  steps:
+    - uses: actions/checkout@master
+    - name: Use Node.js ${{ env.NODE_VERSION }}
+      uses: actions/setup-node@v1
+      with:
+        node-version: ${{ env.NODE_VERSION }}
+
+    - name: yarn install, build
+      run: |
+        yarn install
+        yarn run build && yarn run export
+      working-directory: .
+
+    - name: set firebase project
+      uses: w9jds/firebase-action@master
+      with:
+        args: use $PROJECT_ID
+      env:
+        FIREBASE_TOKEN:  ${{ secrets.FIREBASE_TOKEN }}
+
+    - name: deploy site to Firebase(consumer)
+      uses: w9jds/firebase-action@master
+      with:
+        args: deploy --only hosting
+      env:
+        FIREBASE_TOKEN:  ${{ secrets.FIREBASE_TOKEN }}
